@@ -1,58 +1,113 @@
 🧠 AI-Powered Medical Report Simplifier (Backend)
 
-Built by Devansh Gupta (Problem Statement 7 Submission)
+Developed by: Devansh Gupta
+Submission: Problem Statement 7 – AI for Healthcare Simplification
 
 📋 Overview
 
-This backend project simplifies complex medical reports into easy-to-understand summaries for patients.
-It uses OCR + AI-based text normalization + plain-language explanation, ensuring no hallucinated or fake medical data is generated.
+The AI-Powered Medical Report Simplifier intelligently converts complex medical reports into simple, human-readable summaries.
+It uses OCR + Spell Correction + AI Normalization + Hallucination Guardrails to ensure high accuracy and reliability.
 
-The system can handle both typed and scanned medical reports (images or PDFs), extract test data accurately, normalize them, and provide a friendly explanation of the findings.
+✅ Works with both text and scanned image/PDF reports
+✅ Fixes OCR typos and formatting
+✅ Generates clear, non-diagnostic summaries for patients
 
 ⚙️ Architecture
-                ┌──────────────────────────┐
-                │        Frontend UI       │
-                │ (Future / Optional)      │
-                └────────────┬─────────────┘
-                             │  (HTTP POST)
-                             ▼
-               ┌───────────────────────────┐
-               │     FastAPI Backend       │
-               │───────────────────────────│
-               │ /upload/text              │  →  Extracts tests (OCR/Text)
-               │ /upload/normalize         │  →  Normalizes & validates data
-               │ /upload/api/analyze       │  →  AI explanation & summary
-               └────────────┬──────────────┘
-                            │
-           ┌────────────────┴────────────────┐
-           │                                 │
-┌────────────────────────┐     ┌────────────────────────┐
-│  Tesseract OCR Engine  │     │ NVIDIA Phi-4 Mini LLM │
-│ (Text/Image Extraction)│     │ (Medical Explanation)  │
-└────────────────────────┘     └────────────────────────┘
+
+Your backend follows a modular, layered pipeline built with FastAPI and Python 3.10.
+
+1️⃣ Input Layer
+
+Accepts either typed text or uploaded image/PDF files.
+
+Automatically detects the input type and processes accordingly.
+
+📁 app/api/upload.py
+
+2️⃣ OCR & Confidence Engine
+
+Uses Tesseract OCR (and Poppler for PDFs) to extract text.
+
+Calculates average OCR Confidence Score using per-word metadata.
+
+📁 app/services/ocr.py
+
+3️⃣ Spell Correction Layer
+
+Fixes OCR typos using a custom medical dictionary + fuzzy matching.
+
+Example corrections:
+
+“Hemglobin” → “Hemoglobin”
+
+“Hgh” → “High”
+
+“Glocose” → “Glucose”
+
+📁 app/services/spellCorrection.py
+
+4️⃣ Normalization & Guardrails Layer
+
+Extracts structured test data:
+name, value, unit, status, and reference range.
+
+Removes unwanted symbols and formats (11,200 → 11200).
+
+Includes Guardrails to reject hallucinated tests not found in user input (via fuzzy matching).
+
+📁 app/services/Normalize.py
+
+5️⃣ AI Summarization Layer
+
+Powered by NVIDIA Phi-4 Mini via OpenAI-compatible API.
+
+Generates easy-to-understand, non-diagnostic explanations for patients.
+
+Adds short notes and explanations for each test result.
+
+📁 app/api/summary.py
+
+6️⃣ Final Workflow
+     ┌───────────────────────────────┐
+     │      Input (Text/Image)       │
+     └──────────────┬────────────────┘
+                    │
+                    ▼
+      OCR Extraction + Confidence (Tesseract)
+                    │
+                    ▼
+     Spell Correction (Fuzzy + Dictionary)
+                    │
+                    ▼
+     Normalization (Regex + Range Mapping)
+                    │
+                    ▼
+     Guardrail Validation (Anti-Hallucination)
+                    │
+                    ▼
+     AI Explanation (NVIDIA Phi-4 Mini)
+                    │
+                    ▼
+         JSON Response with Summary
 
 🧩 Tech Stack
 Component	Technology
 Language	Python 3.10
 Framework	FastAPI
-AI Model	NVIDIA Phi-4 Mini (OpenAI-compatible API)
+AI Model	NVIDIA Phi-4 Mini (via OpenAI-compatible API)
 OCR Engine	Tesseract OCR + Poppler for PDFs
-Spell Correction	Fuzzy Matching + Manual Mapping
+Spell Correction	Regex + Fuzzy Matching
 Containerization	Docker
-Deployment	Render / Ngrok (for local testing)
+Deployment	Render / Ngrok (for demo)
 🚀 Key Features
 
-📄 OCR + Spell Correction → Reads both scanned and typed medical reports.
-
-🧮 Normalization → Standardizes test names, units, and reference ranges.
-
-🧠 AI Explanation → Converts complex results into easy-to-understand summaries.
-
-🧰 Guardrails → Detects hallucinated or non-existent tests using regex + fuzzy logic.
-
-🔄 Flexible Input → Supports both text and image uploads.
-
-⚡ Dockerized → Fully portable and cloud-deployable.
+✅ OCR + Spell Correction – Reads scanned and typed reports accurately
+✅ Normalization – Cleans, validates, and structures extracted data
+✅ AI Explanation – Converts data into easy-to-understand summaries
+✅ Guardrails – Detects and blocks hallucinated test names
+✅ Confidence Score – Evaluates OCR text reliability
+✅ Dual Input Mode – Works with both file and text form inputs
+✅ Dockerized – Fully portable and deployable on any cloud
 
 🏗️ Project Structure
 Backend/
@@ -60,13 +115,13 @@ Backend/
 ├── app/
 │   ├── api/
 │   │   ├── upload.py          # Handles OCR & text upload routes
-│   │   └── summary.py         # AI analysis & summarization logic
+│   │   └── summary.py         # AI-based summarization logic
 │   │
 │   ├── services/
-│   │   ├── ocr.py             # Tesseract OCR + confidence calculation
-│   │   ├── spellCorrection.py # Manual + fuzzy spelling correction
+│   │   ├── ocr.py             # OCR extraction + confidence calculation
+│   │   ├── spellCorrection.py # Cleans OCR typos using fuzzy logic
 │   │   ├── Normalize.py       # AI normalization + hallucination guardrail
-│   │   └── confidence.py      # Average OCR confidence calculator
+│   │   └── confidence.py      # Computes average OCR confidence
 │   │
 │   ├── main.py                # FastAPI app entry point
 │   └── __init__.py
@@ -92,32 +147,32 @@ pip install -r requirements.txt
 🧩 4. Run FastAPI Server
 uvicorn app.main:app --reload
 
-🧩 5. Access the API
+🧩 5. Access API Docs
 
-Open http://127.0.0.1:8000/docs
+👉 Open: http://127.0.0.1:8000/docs
 
 🐳 Run with Docker
-Step 1 — Build the image
+Step 1 — Build Image
 docker build -t medical-report-api .
 
-Step 2 — Run the container
+Step 2 — Run Container
 docker run -d -p 8000:8000 medical-report-api
 
-Step 3 — Test it
+Step 3 — Open Docs
 
-Open: http://localhost:8000/docs
+👉 http://localhost:8000/docs
 
 🔍 API Endpoints
 Endpoint	Method	Description
-/upload/text	POST	Accepts image or text. Extracts tests + returns confidence.
-/upload/normalize	POST	Normalizes medical tests and units.
-/upload/api/analyze	POST	AI generates a patient-friendly summary.
-📡 Sample Input / Output
-🧾 Input:
+/upload/text	POST	Accepts text or image, extracts tests, and returns confidence
+/upload/normalize	POST	Normalizes test names and units
+/upload/api/analyze	POST	AI generates a patient-friendly summary
+🧾 Example
+Input:
 CBC: Hemglobin 10.2 g/dL (Low)
 WBC 11200 /uL (Hgh)
 
-🔍 Output:
+Output:
 {
  "tests": [
   {"name":"Hemoglobin","value":10.2,"unit":"g/dL","status":"low","ref_range":{"low":12.0,"high":15.0}},
@@ -127,63 +182,55 @@ WBC 11200 /uL (Hgh)
  "status": "ok"
 }
 
-🧠 Prompts Used
+🧠 Prompts Used for AI Normalization
 
-The AI model was prompted with structured, rule-based instructions:
+“You are an AI medical text parser.
+Extract test names, numeric values, units, and status.
+Fix OCR errors (e.g., ‘Hemglobin’ → ‘Hemoglobin’).
+Add reference ranges.
+Output only valid JSON.
+Provide a short, plain-language summary.”
 
-You are an AI medical text parser.
-1. Extract tests with name, value, unit, status.
-2. Normalize names and fix OCR spellings.
-3. Add reference ranges.
-4. Provide plain-language summary.
-5. Output only valid JSON without commentary.
-
-
-Refinements were made iteratively to handle OCR errors, misspellings, and numerical mismatches (e.g., 11,200 → 11200).
-
-🧩 State Management Choices
-
-Validation Layer → Regex + Fuzzy Matching (difflib)
-
-Error Guardrail → Rejects hallucinated AI outputs not found in input
-
-OCR Confidence Score → Averaged from Tesseract’s per-word data
-
-Dual Input Mode → Chooses between text or image dynamically
-
+🧩 State Management & Guardrails
+Feature	Description
+Validation Layer	Regex + Fuzzy Matching (via difflib)
+Error Guardrail	Rejects hallucinated tests not found in input
+OCR Confidence	Average word confidence (0.0–1.0)
+Dual Input Handling	Chooses text or image dynamically
+AI Consistency Check	Auto-corrects malformed JSON responses
 🧩 Screenshots (Attach Below)
-
-🖼️ You can drag & drop images here in GitHub after upload.
-
 Screenshot	Description
 
-	Example of input image report
+	Example input medical report
 
-	FastAPI Swagger interface
+	FastAPI Swagger UI
 
-	Sample AI JSON response
+	Sample JSON AI output
+
+(You can upload screenshots directly in GitHub)
+
 ⚠️ Known Issues
 
-Minor OCR inaccuracies for very noisy scans.
+OCR may slightly misread noisy scans
 
-Some AI-generated summaries may simplify complex test results.
+Poppler path differs on Windows/Linux
 
-Poppler path for PDF may differ on Windows & Docker.
+AI summaries simplify medical terms intentionally
 
-🚀 Potential Improvements
+🚀 Future Improvements
 
-Add database logging (MongoDB or PostgreSQL).
+Integrate MongoDB for report history
 
-Integrate authentication (JWT).
+Add JWT Authentication
 
-Add frontend dashboard for visualization.
+Build React Dashboard for visualization
 
-Improve test reference range dataset.
+Add custom range dataset for more test types
 
-Add cloud storage for uploaded reports.
+Enable cloud storage (S3/Render) for uploads
 
 💬 Credits
 
-Developed by Devansh Gupta
-Under AI-Powered Medical Report Simplifier – Problem Statement 7
-📧 Contact: [your email if you want to include]
+🧑‍💻 Developed by: Devansh Gupta
+🎯 AI-Powered Medical Report Simplifier – Problem Statement 7
+📧 Contact: (optional)
