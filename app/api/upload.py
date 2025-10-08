@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, File, Form,HTTPException
+from fastapi import APIRouter, UploadFile, File, Form,HTTPException,Request
 from app.services.spellCorrection import clean_ocr_text
 from app.services.confidence import CalConfidence
 from app.api.summary import analyze
@@ -36,15 +36,14 @@ async def extract(file: UploadFile):
     return text.strip(), confidence
 
 
-
-
 @router.post("/text",
-            description="When sending only text input ensure in file  UNTICK send empty value")
+            description="You can send only one of the file or text .follow instruction mentioned")
 async def process_text(
-    text_input: str = Form(None),
-    file: UploadFile = File(None),
-    ):
+     text_input: Optional[str] = Form(None, description="To send only text untick send empty values of File input",example="CBC: Hemoglobin 10.2 g/dL (Low), WBC 11,200 /uL (High)"),
+    file: Optional[UploadFile] = File(None, description="To send only file tick the send empty value of text input"),
+):
     
+
     #invalid input 
     if not text_input and not file:
         raise HTTPException(status_code=400, detail="No input")
@@ -62,6 +61,7 @@ async def process_text(
     cleaned_text = clean_ocr_text(input_text)
     cleaned_text = re.sub(r'(?<=\d),(?=\d{3}\b)', '', cleaned_text)
     #To seprate according to new lines
+    cleaned_text = re.sub(r',(?!\d)', '\n', cleaned_text)
     cleaned_text = re.sub(r'[;]+', '\n', cleaned_text)
     cleaned_text = re.sub(r'[\r\t ]*\n[\r\t ]*', '\n', cleaned_text).strip()
     # split on comma
@@ -74,10 +74,13 @@ async def process_text(
 
 
 @router.post("/normalize",
-            description="When sending only text input ensure in file input UNTICK send empty value")
+            description="You can send only one of the file or text .follow instruction mentioned")
 async def process_normalize(    
-    text_input: str = Form(None),
-    file: UploadFile = File(None)):
+     text_input: Optional[str] = Form( None,example="CBC: Hemoglobin 10.2 g/dL (Low), WBC 11,200 /uL (High)", description="To send only text untick send empty values of File input",),
+    file: Optional[UploadFile] = File( None, description="To send only file tick the send empty value of text input"),):
+
+    if file and not getattr(file, "filename", None):
+        file = None
 
     # check for no input
     if not text_input and not file:
@@ -102,12 +105,13 @@ async def process_normalize(
         "confidence": confidence
     }
 
-@router.post("/api/analyze",
-             description="When sending only text input ensure in file input  UNTICK send empty input")
+@router.post("/api/analyze",description="You can send only one of the file or text .follow instruction mentioned")
 async def analyze_medical_text(
-    text_input: str = Form(None),
-    file: UploadFile = File(None)):
+     text_input: Optional[str] = Form( None, example=None,description="To send only text untick send empty values of File input"),
+    file: Optional[UploadFile] = File( None,example=None, description="To send only file tick the send empty value of text input"),):
     
+    if file and not getattr(file, "filename", None):
+        file = None
 
     # no input
     if not text_input and not file:

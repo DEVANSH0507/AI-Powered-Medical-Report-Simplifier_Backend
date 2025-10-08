@@ -4,7 +4,9 @@ import cv2
 import numpy as np
 from pdf2image import convert_from_bytes
 
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+#pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
+
 
 #to calculate confidence we apply set of steps to get confidence from tesseract
 
