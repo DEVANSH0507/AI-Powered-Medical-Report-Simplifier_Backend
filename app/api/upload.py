@@ -40,7 +40,7 @@ async def extract(file: UploadFile):
             description="You can send only one of the file or text .follow instruction mentioned")
 async def process_text(
      text_input: Optional[str] = Form(None, description="To send only text untick send empty values of File input",example="CBC: Hemoglobin 10.2 g/dL (Low), WBC 11,200 /uL (High)"),
-    file: Optional[UploadFile] = File(None, description="To send only file tick the send empty value of text input"),
+    file: Optional[UploadFile] = File(None, description="To send only file remove text (string) in text input"),
 ):
     
 
