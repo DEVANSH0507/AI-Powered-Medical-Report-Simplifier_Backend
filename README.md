@@ -263,7 +263,6 @@ curl -X POST "http://localhost:8000/upload/normalize" \
 Devansh Gupta
 Backend Developer | AI Systems & OCR Automation
 
-📧 [Optional Email]
 🧩 Project: AI-Powered Medical Report Simplifier – Problem Statement 7
 
 
